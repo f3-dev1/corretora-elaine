@@ -7,15 +7,17 @@ import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import Motion from "@/components/Motion";
 import { Logo } from "@/components/icons";
+import { todosImoveis } from "@/lib/catalogo";
 import { bairros, site, whatsappUrl } from "@/data/site";
 
-export default function Home() {
+export default async function Home() {
+  const total = (await todosImoveis()).filter((x) => x.status === "publicado").length;
   return (
     <>
       <header className="top gutter" id="top">
         <div className="inner">
           <nav className="left mono" aria-label="Seções">
-            <a href="#imoveis">Imóveis</a>
+            <a href="/imoveis">Imóveis</a>
             <a href="#financiamento">Financiamento</a>
             <a href="#sobre">Sobre</a>
           </nav>
@@ -29,7 +31,7 @@ export default function Home() {
       <main className="after" id="after">
         <section className="facts gutter" aria-label="Números">
           <ul className="inner">
-            <li><span className="lbl mono">Anúncios no catálogo</span><strong data-count={site.catalogCount}>{site.catalogCount}</strong></li>
+            <li><span className="lbl mono">Imóveis no catálogo</span><strong data-count={total}>{total}</strong></li>
             <li><span className="lbl mono">Nota no Google</span><strong data-count={site.googleRating} data-dec="1">{site.googleRating.toLocaleString("pt-BR")}</strong></li>
             <li><span className="lbl mono">Especialidade</span><strong>Chácaras</strong></li>
             <li><span className="lbl mono">Financiamento e FGTS</span><strong>Do início à chave</strong></li>
@@ -76,7 +78,7 @@ export default function Home() {
       </main>
 
       <Footer />
-      <SearchBar />
+      <SearchBar total={total} />
       <Motion />
     </>
   );

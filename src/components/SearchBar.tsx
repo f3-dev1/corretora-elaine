@@ -1,12 +1,12 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
-import { site, whatsappUrl } from "@/data/site";
+import { whatsappUrl } from "@/data/site";
 import { WhatsAppIcon } from "./icons";
 
 const OPTS = ["Comprar", "Alugar"] as const;
 
-export default function SearchBar() {
+export default function SearchBar({ total }: { total: number }) {
   const [mode, setMode] = useState<(typeof OPTS)[number]>("Comprar");
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const [pill, setPill] = useState({ x: 0, w: 0 });
@@ -31,9 +31,9 @@ export default function SearchBar() {
           </button>
         ))}
       </div>
-      <a className="go" href="#imoveis">
+      <a className="go" href={`/imoveis?finalidade=${mode === "Comprar" ? "venda" : "aluguel"}`}>
         <span>Buscar imóveis</span>
-        <span className="arrow">{site.catalogCount} →</span>
+        <span className="arrow">{total} →</span>
       </a>
       <a className="wa" href={whatsappUrl(`Olá, Elaine! Quero ${mode.toLowerCase()} um imóvel em Itanhaém.`)} target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
         <WhatsAppIcon size={19} />

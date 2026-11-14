@@ -93,8 +93,8 @@ export default function Hero() {
         <div className="frame-dim" aria-hidden="true" />
 
         <nav className="tab" aria-label="Principal">
-          <a href="#imoveis">Comprar</a>
-          <a href="#imoveis">Alugar</a>
+          <a href="/imoveis?finalidade=venda">Comprar</a>
+          <a href="/imoveis?finalidade=aluguel">Alugar</a>
           <a className="tab-logo" href="#inicio" aria-label={`${site.name}, início`}><Logo /></a>
           <a href="#financiamento">Financiamento</a>
           <a href="#sobre">Sobre</a>
@@ -120,7 +120,7 @@ export default function Hero() {
           <div className="hside">
             <span className="lbl mono h-in">{site.corretora} · CRECI {site.creci}</span>
             <p className="h-in">Especialista em chácaras na praia e financiamento bancário.</p>
-            <a className="pillcta h-in" href="#imoveis">
+            <a className="pillcta h-in" href="/imoveis">
               Ver imóveis <span aria-hidden="true"><ArrowIcon /></span>
             </a>
           </div>

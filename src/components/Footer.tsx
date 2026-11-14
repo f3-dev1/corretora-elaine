@@ -14,7 +14,7 @@ export default function Footer() {
             <a className="fbtn solid magnetic" href={whatsappUrl()} target="_blank" rel="noopener">
               <WhatsAppIcon size={20} /> Chamar no WhatsApp
             </a>
-            <a className="fbtn magnetic" href="#imoveis">Ver imóveis</a>
+            <a className="fbtn magnetic" href="/imoveis">Ver imóveis</a>
             <a className="fbtn magnetic" href={instagramUrl} target="_blank" rel="noopener">Instagram</a>
           </div>
           <address className="finfo mono f-in">
