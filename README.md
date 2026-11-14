@@ -25,3 +25,8 @@ Abra http://localhost:3000.
 | Cores, fontes e layout | `src/app/globals.css` |
 
 Variável opcional: `NEXT_PUBLIC_SITE_URL` (domínio final, usado em SEO e sitemap).
+
+## Capa de compartilhamento (WhatsApp)
+
+A imagem que aparece ao enviar o link fica em `public/og-zenite.jpg` (1200 × 630, ~135 KB). O gerador está em `scripts/capa/route.tsx.txt`, com as instruções no topo do arquivo.
+

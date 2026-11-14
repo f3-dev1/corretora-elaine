@@ -14,8 +14,8 @@ export const metadata: Metadata = {
   title: titulo,
   description: descricao,
   alternates: { canonical: "/imoveis" },
-  openGraph: { title: titulo, description: descricao, url: "/imoveis" },
-  twitter: { card: "summary_large_image", title: titulo, description: descricao },
+  openGraph: { title: titulo, description: descricao, url: "/imoveis", images: [{ url: "/og-zenite.jpg", width: 1200, height: 630, type: "image/jpeg" }] },
+  twitter: { card: "summary_large_image", title: titulo, description: descricao, images: ["/og-zenite.jpg"] },
 };
 
 export default async function ImoveisPage(props: PageProps<"/imoveis">) {

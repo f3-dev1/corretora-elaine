@@ -21,9 +21,9 @@ export const metadata: Metadata = {
     siteName: site.name,
     title,
     description,
-    images: [{ url: "/img/coronel-2.jpg", width: 1800, height: 1350, alt: "Chácara no Jardim Coronel, Itanhaém" }],
+    images: [{ url: "/og-zenite.jpg", width: 1200, height: 630, type: "image/jpeg", alt: "Zênite Imóveis: imóveis em Itanhaém, com quem conhece o litoral" }],
   },
-  twitter: { card: "summary_large_image", title, description, images: ["/img/coronel-2.jpg"] },
+  twitter: { card: "summary_large_image", title, description, images: ["/og-zenite.jpg"] },
 };
 
 export const viewport: Viewport = { themeColor: "#3A271C", viewportFit: "cover" };
