@@ -620,3 +620,8 @@ html { scroll-padding-top: 72px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* topo: no celular o "Agende sua visita" vira "Agendar" para não invadir o logo */
+.top .right { white-space: nowrap; }
+.cta-curto { display: none; }
+@media (max-width: 640px) { .cta-longo { display: none; } .cta-curto { display: inline; } }

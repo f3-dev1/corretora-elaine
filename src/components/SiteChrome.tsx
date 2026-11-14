@@ -12,7 +12,7 @@ export function SiteHeader() {
           <Link href="/#financiamento">Financiamento</Link>
         </nav>
         <Link href="/" aria-label={`${site.name}, início`}><Logo /></Link>
-        <a className="right mono" href={visitaUrl()} target="_blank" rel="noopener">↳ Agende sua visita</a>
+        <a className="right mono" href={visitaUrl()} target="_blank" rel="noopener" aria-label="Agende sua visita pelo WhatsApp">↳ <span className="cta-longo">Agende sua visita</span><span className="cta-curto">Agendar</span></a>
       </div>
     </header>
   );
