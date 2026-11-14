@@ -49,11 +49,11 @@ export default function Home() {
 
         <section className="about gutter" id="sobre">
           <div className="inner wrap2">
-            <figure>
+            <figure className="portrait">
               <div className="ph">
-                <Image src="/img/fachada.webp" alt="Fachada da Zênite Imóveis, com letreiro marrom e dourado e portas de vidro" fill sizes="(max-width: 860px) 100vw, 50vw" />
+                <Image src="/img/elaine.jpg" alt="Elaine Nunes, corretora da Zênite Imóveis, de blazer vermelho, sorrindo" fill sizes="380px" />
               </div>
-              <figcaption className="lbl mono">{site.address} · {site.bairro}</figcaption>
+              <figcaption className="lbl mono">{site.corretora} · CRECI {site.creci}</figcaption>
             </figure>
             <div>
               <h2 className="split">

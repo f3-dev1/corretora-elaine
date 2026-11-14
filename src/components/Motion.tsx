@@ -124,7 +124,7 @@ export default function Motion() {
       gsap.to(".fin-photos", { scale: 1.06, ease: "none", scrollTrigger: { trigger: ".fin", start: "top top", end: "bottom bottom", scrub: true } });
 
       // fachada em parallax
-      gsap.fromTo(".about .ph img", { yPercent: -5, scale: 1.12 }, { yPercent: 5, scale: 1.12, ease: "none", scrollTrigger: { trigger: ".about", start: "top bottom", end: "bottom top", scrub: true } });
+      gsap.fromTo(".about .ph img", { yPercent: -2, scale: 1.05 }, { yPercent: 2, scale: 1.05, ease: "none", scrollTrigger: { trigger: ".about", start: "top bottom", end: "bottom top", scrub: true } });
 
       // rodapé-cortina
       gsap.fromTo(".big", { yPercent: 30, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, ease: "none", scrollTrigger: { trigger: "#contato", start: "top 80%", end: "bottom bottom", scrub: true } });
