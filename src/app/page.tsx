@@ -2,6 +2,7 @@ import Image from "next/image";
 import Hero from "@/components/Hero";
 import Listings from "@/components/Listings";
 import Financing from "@/components/Financing";
+import Simulator from "@/components/Simulator";
 import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import Motion from "@/components/Motion";
@@ -46,6 +47,7 @@ export default function Home() {
 
         <Listings />
         <Financing />
+        <Simulator />
 
         <section className="about gutter" id="sobre">
           <div className="inner wrap2">

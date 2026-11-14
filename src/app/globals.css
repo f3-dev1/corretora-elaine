@@ -209,6 +209,58 @@ section { padding-block: clamp(72px, 10vw, 140px); }
   .stage::after { background: linear-gradient(0deg, rgba(14, 10, 7, 0.88) 0%, rgba(14, 10, 7, 0.5) 60%, rgba(14, 10, 7, 0.35) 100%); }
 }
 
+.fin-link { display: inline-block; margin-top: 26px; color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255, 255, 255, 0.5); padding-bottom: 4px; }
+.fin-link:hover { border-color: #fff; }
+
+/* simulador de financiamento */
+.sim { border-bottom: 1px solid var(--line); }
+.sim-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 520px); gap: clamp(32px, 5vw, 72px); align-items: center; }
+.sim-form { display: grid; gap: 30px; }
+.sim-form > .lbl { margin-bottom: -18px; }
+.sim-form h2 { font-size: clamp(34px, 4vw, 60px); }
+.sim-lead { color: var(--gray); max-width: 46ch; margin-top: -12px; }
+.sim-field { display: grid; gap: 12px; }
+.sim-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.sim-row label { font-size: 16px; display: inline-flex; align-items: center; gap: 10px; }
+.sim-hint { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; padding: 3px 8px; border-radius: 999px; background: #f5ecd9; color: #8a6420; }
+.sim-box { display: inline-flex; align-items: center; gap: 10px; height: 48px; padding: 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--white); transition: border-color 0.2s; }
+.sim-box:focus-within { border-color: var(--ink); }
+.sim-box span { color: var(--gray); font-size: 14px; }
+.sim-box .suf { white-space: nowrap; }
+.sim-box input { all: unset; width: 9ch; text-align: right; font-size: 18px; font-variant-numeric: tabular-nums; color: var(--ink); }
+.sim-box.gold { background: #fbf6ec; border-color: #ecdcbc; }
+.sim-box.gold input { color: #8a6420; }
+.sim-range { -webkit-appearance: none; appearance: none; width: 100%; height: 22px; background: transparent; cursor: pointer; margin: 0; }
+.sim-range::-webkit-slider-runnable-track { height: 4px; border-radius: 4px; background: linear-gradient(90deg, var(--brown) var(--p), var(--line) var(--p)); }
+.sim-range::-moz-range-track { height: 4px; border-radius: 4px; background: var(--line); }
+.sim-range::-moz-range-progress { height: 4px; border-radius: 4px; background: var(--brown); }
+.sim-range::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -9px; border-radius: 50%; background: var(--white); border: 6px solid var(--brown); box-shadow: 0 2px 8px rgba(36, 23, 15, 0.25); transition: transform 0.2s var(--ease); }
+.sim-range::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--white); border: 6px solid var(--brown); }
+.sim-range:active::-webkit-slider-thumb { transform: scale(1.15); }
+.sim-range:focus-visible { outline: 2px solid var(--brown); outline-offset: 4px; border-radius: 4px; }
+.sim-ends { display: flex; justify-content: space-between; color: var(--gray); }
+
+.sim-card { background: var(--brown); color: var(--brown-ink); border-radius: 22px; padding: clamp(24px, 3vw, 36px); display: grid; gap: 18px; box-shadow: 0 40px 80px -40px rgba(36, 23, 15, 0.6); }
+.sim-k { color: var(--gold); }
+.sim-card h3 { font-weight: 400; font-size: clamp(22px, 2vw, 28px); letter-spacing: -0.02em; line-height: 1.15; margin-top: -8px; padding-bottom: 18px; border-bottom: 1px solid rgba(244, 236, 226, 0.14); }
+.sim-card dl { margin: 0; display: grid; gap: 12px; }
+.sim-card dl div { display: flex; justify-content: space-between; gap: 16px; font-size: 15px; }
+.sim-card dt { opacity: 0.75; }
+.sim-card dd { margin: 0; font-weight: 500; font-variant-numeric: tabular-nums; text-align: right; }
+.sim-card dd.g { color: var(--gold); }
+.sim-card dd.soft { font-weight: 400; opacity: 0.7; font-size: 13px; }
+.sim-big { display: grid; justify-items: center; gap: 6px; text-align: center; padding: 26px 16px; border-radius: 16px; background: rgba(0, 0, 0, 0.18); border: 1px solid rgba(244, 236, 226, 0.1); }
+.sim-big .mono { opacity: 0.7; }
+.sim-big strong { font-weight: 400; font-size: clamp(38px, 4.4vw, 58px); letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; color: #f6e7c4; }
+.sim-sub { font-size: 13px; opacity: 0.65; }
+.sim-renda { font-size: 14px; opacity: 0.85; text-align: center; }
+.sim-renda b { font-weight: 500; }
+.sim-cta { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 56px; border-radius: 14px; background: var(--gold); color: var(--brown-deep); text-decoration: none; font-weight: 500; transition: filter 0.2s, transform 0.2s var(--ease); }
+.sim-cta:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.sim-note { font-size: 12px; line-height: 1.45; opacity: 0.55; text-align: center; }
+@media (max-width: 900px) { .sim-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 420px) { .sim-box input { width: 7ch; font-size: 16px; } .sim-row { align-items: flex-start; } }
+
 /* sobre */
 .about { background: var(--paper); }
 .about .wrap2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 80px); align-items: center; }

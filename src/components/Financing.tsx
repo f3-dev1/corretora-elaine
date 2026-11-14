@@ -27,6 +27,7 @@ export default function Financing() {
               <span className="line"><span>A Elaine vai junto.</span></span>
             </h2>
             <p className="lead">Do primeiro cálculo à entrega da chave. O banco decide o crédito; ela acompanha cada etapa com você.</p>
+            <a className="fin-link mono" href="#simulador">Simular agora →</a>
           </div>
           <ol className="cards">
             {etapas.map((e, i) => (
