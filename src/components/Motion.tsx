@@ -127,7 +127,7 @@ export default function Motion() {
       gsap.fromTo(".about .ph img", { yPercent: -2, scale: 1.05 }, { yPercent: 2, scale: 1.05, ease: "none", scrollTrigger: { trigger: ".about", start: "top bottom", end: "bottom top", scrub: true } });
 
       // rodapé-cortina
-      gsap.fromTo(".big", { yPercent: 30, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, ease: "none", scrollTrigger: { trigger: "#contato", start: "top 80%", end: "bottom bottom", scrub: true } });
+      gsap.fromTo(".big", { yPercent: 25, autoAlpha: 0.2 }, { yPercent: 0, autoAlpha: 1, ease: "none", scrollTrigger: { trigger: "#contato", start: "top 80%", end: "bottom bottom", scrub: true } });
       gsap.fromTo(".f-in", { y: 40, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.12, ease: "none", scrollTrigger: { trigger: "#contato", start: "top 55%", end: "top 10%", scrub: true } });
     });
 

@@ -24,7 +24,7 @@ export default function Footer() {
           </address>
         </div>
         <div className="inner fbottom mono">
-          <span>© 2026 {site.name} · CRECI {site.creci}</span>
+          <span>© 2026 {site.name} · <span className="nw">CRECI {site.creci}</span></span>
           <span className="sig">{site.tagline}</span>
           <button
             className="totop magnetic"
