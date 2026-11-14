@@ -53,7 +53,7 @@ export default function Home() {
           <div className="inner wrap2">
             <figure className="portrait">
               <div className="ph">
-                <Image src="/img/elaine.jpg" alt="Elaine Nunes, corretora da Zênite Imóveis, de blazer vermelho, sorrindo" fill sizes="380px" />
+                <Image src="/img/elaine.jpg" alt="Elaine Nunes, corretora da Zênite Imóveis, de blazer vermelho, sorrindo" fill sizes="(max-width: 520px) 100vw, 480px" />
               </div>
               <figcaption className="lbl mono">{site.corretora} · CRECI {site.creci}</figcaption>
             </figure>
