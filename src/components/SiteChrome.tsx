@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Logo, WhatsAppIcon } from "./icons";
-import { site, instagramUrl, whatsappUrl } from "@/data/site";
+import { site, instagramUrl, visitaUrl, whatsappUrl } from "@/data/site";
 
 export function SiteHeader() {
   return (
@@ -12,7 +12,7 @@ export function SiteHeader() {
           <Link href="/#financiamento">Financiamento</Link>
         </nav>
         <Link href="/" aria-label={`${site.name}, início`}><Logo /></Link>
-        <a className="right mono" href={whatsappUrl()} target="_blank" rel="noopener">↳ WhatsApp</a>
+        <a className="right mono" href={visitaUrl()} target="_blank" rel="noopener">↳ Agende sua visita</a>
       </div>
     </header>
   );

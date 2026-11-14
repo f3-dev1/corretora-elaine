@@ -24,6 +24,9 @@ export function whatsappUrl(message = "Olá, Elaine! Vim pelo site e quero ajuda
   return `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(message)}`;
 }
 
+export const visitaUrl = (imovel?: string) =>
+  whatsappUrl(imovel ? `Olá, Elaine! Quero agendar uma visita ao imóvel ${imovel}.` : "Olá, Elaine! Quero agendar uma visita a um imóvel.");
+
 export const bairros = [
   "Jardim Coronel",
   "Belas Artes",

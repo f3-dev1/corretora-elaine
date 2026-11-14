@@ -8,7 +8,7 @@ import SearchBar from "@/components/SearchBar";
 import Motion from "@/components/Motion";
 import { Logo } from "@/components/icons";
 import { todosImoveis } from "@/lib/catalogo";
-import { bairros, site, whatsappUrl } from "@/data/site";
+import { bairros, site, visitaUrl } from "@/data/site";
 
 export default async function Home() {
   const total = (await todosImoveis()).filter((x) => x.status === "publicado").length;
@@ -22,7 +22,7 @@ export default async function Home() {
             <a href="#sobre">Sobre</a>
           </nav>
           <a href="#inicio" aria-label={`${site.name}, início`}><Logo /></a>
-          <a className="right mono" href={whatsappUrl()} target="_blank" rel="noopener">↳ WhatsApp</a>
+          <a className="right mono" href={visitaUrl()} target="_blank" rel="noopener">↳ Agende sua visita</a>
         </div>
       </header>
 
