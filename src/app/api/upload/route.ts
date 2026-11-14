@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import { COOKIE, sessaoValida } from "@/lib/auth";
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const body = (await request.json()) as HandleUploadBody;
   try {
+    const body = (await request.json()) as HandleUploadBody;
     const json = await handleUpload({
       body,
       request,

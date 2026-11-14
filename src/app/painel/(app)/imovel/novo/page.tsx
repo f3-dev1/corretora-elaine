@@ -1,8 +1,8 @@
-import { todosImoveisFresco } from "@/lib/catalogo";
+import { imoveisDoPainel } from "@/lib/catalogo";
 import ImovelForm from "../ImovelForm";
 
 export default async function NovoImovel() {
-  const lista = await todosImoveisFresco();
+  const lista = await imoveisDoPainel();
   const bairros = [...new Set(lista.map((x) => x.bairro).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, "pt-BR"));
   return (
     <>

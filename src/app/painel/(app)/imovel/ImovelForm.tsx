@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { upload } from "@vercel/blob/client";
 import { salvarImovel } from "../../actions";
 import { STATUS_LABEL, TIPOS, type Imovel, type Status } from "@/lib/tipos";
@@ -23,29 +23,47 @@ export default function ImovelForm({ inicial, bairros }: Props) {
   const [nova, setNova] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [arrastando, setArrastando] = useState(false);
+  const sujo = useRef(false);
+  const lotesAtivos = useRef(0);
+  const jaEnviados = useRef(new Set<string>());
 
-  const set = <K extends keyof Imovel>(k: K, v: Imovel[K] | null) => setD((x) => ({ ...x, [k]: v }));
+  const set = <K extends keyof Imovel>(k: K, v: Imovel[K] | null) => { sujo.current = true; setD((x) => ({ ...x, [k]: v })); };
   const fotos = d.fotos ?? [];
   const carac = d.caracteristicas ?? [];
 
+  // avisa antes de fechar a aba com alterações ou fotos ainda subindo
+  useEffect(() => {
+    const h = (e: BeforeUnloadEvent) => { if (sujo.current || lotesAtivos.current > 0) e.preventDefault(); };
+    addEventListener("beforeunload", h);
+    return () => removeEventListener("beforeunload", h);
+  }, []);
+
+  const TIPOS_FOTO = ["image/jpeg", "image/png", "image/webp", "image/avif"];
   async function enviarArquivos(files: FileList | File[]) {
-    const lista = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    const todos = Array.from(files);
+    const lista = todos.filter((f) => TIPOS_FOTO.includes(f.type) && !jaEnviados.current.has(`${f.name}|${f.size}|${f.lastModified}`));
+    const ignorados = todos.filter((f) => !TIPOS_FOTO.includes(f.type)).length;
+    setErro(ignorados ? `${ignorados} arquivo(s) não são fotos JPG, PNG ou WebP e foram ignorados.` : null);
     if (!lista.length) return;
-    setErro(null);
-    setEnviando({ feito: 0, total: lista.length });
+    sujo.current = true;
+    lotesAtivos.current++;
+    setEnviando((s) => ({ feito: s?.feito ?? 0, total: (s?.total ?? 0) + lista.length }));
     const urls: string[] = [];
+    let falhas = 0;
     for (const f of lista) {
       try {
-        const ext = (f.name.split(".").pop() || "jpg").toLowerCase();
+        const ext = (f.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
         const r = await upload(`imoveis/${d.id ?? "novo"}/${Date.now()}.${ext}`, f, { access: "public", handleUploadUrl: "/api/upload", contentType: f.type });
         urls.push(r.url);
-      } catch (e) {
-        setErro(`Uma foto não subiu: ${(e as Error).message}`);
+        jaEnviados.current.add(`${f.name}|${f.size}|${f.lastModified}`);
+      } catch {
+        falhas++;
       }
       setEnviando((s) => (s ? { ...s, feito: s.feito + 1 } : s));
     }
     setD((x) => ({ ...x, fotos: [...(x.fotos ?? []), ...urls] }));
-    setEnviando(null);
+    if (falhas) setErro(`${falhas} de ${lista.length} fotos não subiram. Use JPG, PNG ou WebP de até 12 MB e tente de novo.`);
+    if (--lotesAtivos.current === 0) setEnviando(null);
   }
 
   const mover = (i: number, dir: -1 | 1) => setD((x) => {
@@ -65,9 +83,10 @@ export default function ImovelForm({ inicial, bairros }: Props) {
     start(async () => {
       const r = await salvarImovel(dados);
       if (!r.ok) { setErro(r.erro ?? "Não foi possível salvar."); return; }
+      sujo.current = false;
       setOk(dados.status === "publicado" ? "Salvo e publicado no site." : "Salvo.");
       if (!inicial) router.push("/painel");
-      else { setD(dados); router.refresh(); }
+      else if (r.imovel) setD(r.imovel); // mostra o que foi gravado de fato
     });
   }
 
@@ -76,7 +95,7 @@ export default function ImovelForm({ inicial, bairros }: Props) {
     <label className="pf">
       <span>{label}</span>
       <div className="pf-suf">
-        <input inputMode="decimal" value={n(k)} onChange={(e) => set(k, (e.target.value.replace(/[^\d.,]/g, "") || null) as never)} />
+        <input value={n(k)} onChange={(e) => set(k, (e.target.value.slice(0, 30) || null) as never)} />
         {suf && <em>{suf}</em>}
       </div>
     </label>
@@ -194,7 +213,7 @@ export default function ImovelForm({ inicial, bairros }: Props) {
         <div className="pf-bar-r">
           {erro && <span className="pn-erro" role="alert">{erro}</span>}
           {ok && <span className="pn-ok" role="status">{ok}</span>}
-          <Link href="/painel" className="pn-btn ghost">Voltar</Link>
+          <Link href="/painel" className="pn-btn ghost" onClick={(e) => { if ((sujo.current || lotesAtivos.current > 0) && !window.confirm("Sair sem salvar as alterações?")) e.preventDefault(); }}>Voltar</Link>
           <button type="submit" className="pn-btn ghost" disabled={salvando || !!enviando}>{salvando ? "Salvando…" : "Salvar"}</button>
           {d.status !== "publicado" && <button type="button" className="pn-btn" disabled={salvando || !!enviando} onClick={() => salvar("publicado")}>Salvar e publicar</button>}
         </div>

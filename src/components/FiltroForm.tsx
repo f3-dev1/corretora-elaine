@@ -5,6 +5,7 @@ import { useRef, useTransition } from "react";
 
 type Opc = [string, number][];
 
+const FILTROS = ["finalidade", "tipo", "bairro", "min", "max", "quartos", "mar", "piscina", "financia", "q", "ordem"];
 const PRECOS = [150000, 250000, 350000, 500000, 750000, 1000000, 1500000];
 const ALUGUEL = [1500, 2500, 3500, 5000, 8000];
 
@@ -17,21 +18,23 @@ export default function FiltroForm({ tipos, bairros }: { tipos: Opc; bairros: Op
   const aluguel = v("finalidade") === "aluguel";
   const faixas = aluguel ? ALUGUEL : PRECOS;
 
-  const aplicar = () => {
+  const aplicar = (e?: { target: EventTarget | null }) => {
     const fd = new FormData(form.current!);
     const q = new URLSearchParams();
     fd.forEach((val, key) => { if (val) q.set(key, String(val)); });
+    // trocar Comprar/Alugar zera o teto de preço (as faixas são diferentes)
+    if ((e?.target as HTMLInputElement | null)?.name === "finalidade") q.delete("max");
     start(() => router.push(`/imoveis${q.size ? `?${q}` : ""}`, { scroll: false }));
   };
 
   return (
-    <form ref={form} className={`filtros${pend ? " busy" : ""}`} onChange={aplicar} onSubmit={(e) => { e.preventDefault(); aplicar(); }} aria-label="Filtrar imóveis">
+    <form key={sp.toString()} ref={form} className={`filtros${pend ? " busy" : ""}`} onChange={(e) => aplicar(e)} onSubmit={(e) => { e.preventDefault(); aplicar(); }} aria-label="Filtrar imóveis">
       <div className="seg-f" role="radiogroup" aria-label="Finalidade">
         {[["", "Todos"], ["venda", "Comprar"], ["aluguel", "Alugar"]].map(([val, lab]) => (
           <label key={val}><input type="radio" name="finalidade" value={val} defaultChecked={v("finalidade") === val} /><span>{lab}</span></label>
         ))}
       </div>
-      <label className="fx fx-q"><span className="mono">Buscar</span><input name="q" type="search" placeholder="Bairro, código ou palavra" defaultValue={v("q")} onChange={(e) => e.stopPropagation()} onBlur={aplicar} /></label>
+      <label className="fx fx-q"><span className="mono">Buscar</span><input name="q" type="search" placeholder="Bairro, código ou palavra" defaultValue={v("q")} onChange={(e) => e.stopPropagation()} onBlur={(e) => { if (e.currentTarget.value !== v("q")) aplicar(); }} /></label>
       <label className="fx"><span className="mono">Tipo</span>
         <select name="tipo" defaultValue={v("tipo")}><option value="">Todos</option>{tipos.map(([t, c]) => <option key={t} value={t}>{t} ({c})</option>)}</select>
       </label>
@@ -54,7 +57,7 @@ export default function FiltroForm({ tipos, bairros }: { tipos: Opc; bairros: Op
       <label className="fx fx-o"><span className="mono">Ordenar</span>
         <select name="ordem" defaultValue={v("ordem")}><option value="">Destaques</option><option value="menor">Menor preço</option><option value="maior">Maior preço</option></select>
       </label>
-      {sp.size > 0 && <button type="button" className="limpar mono" onClick={() => { form.current?.reset(); start(() => router.push("/imoveis", { scroll: false })); }}>Limpar filtros</button>}
+      {FILTROS.some((k) => sp.get(k)) && <button type="button" className="limpar mono" onClick={() => start(() => router.push("/imoveis", { scroll: false }))}>Limpar filtros</button>}
     </form>
   );
 }

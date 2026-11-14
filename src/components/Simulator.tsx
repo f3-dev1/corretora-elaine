@@ -105,7 +105,7 @@ export default function Simulator() {
           />
         </div>
 
-        <aside className="sim-card" aria-live="polite">
+        <aside className="sim-card">
           <span className="mono sim-k">Estimativa de crédito</span>
           <h3>Primeira parcela mensal aproximada</h3>
           <dl>
@@ -115,7 +115,7 @@ export default function Simulator() {
           </dl>
           <div className="sim-big">
             <span className="mono">1ª parcela</span>
-            <strong>{brl(r.primeira)}</strong>
+            <strong aria-live="polite">{brl(r.primeira)}</strong>
             <span className="sim-sub">caindo até {brl(r.ultima)} na última</span>
           </div>
           <p className="sim-renda">Renda familiar sugerida: <b>a partir de {brl(r.renda, 0)}</b> por mês</p>

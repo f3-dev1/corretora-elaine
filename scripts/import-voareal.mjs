@@ -66,7 +66,7 @@ function parse(html, url) {
     status: "publicado",
     destaque: false,
     preco: Number(p.offers.price) || null,
-    bairro: bread.length >= 3 ? bread[2] : null,
+    bairro: bread.length >= 4 ? bread[2] : null, // só quando o caminho tem o nível de bairro
     cidade: p.address?.addressLocality ?? "Itanhaém",
     quartos: p.numberOfBedrooms ?? null,
     banheiros: p.numberOfBathroomsTotal ?? null,
@@ -104,6 +104,7 @@ if (process.argv[2] === "--limpar") {
 }
 
 const sm = await get(`${BASE}/sitemap.xml`);
+if (!sm) { console.error("Não consegui ler o sitemap do VoaReal. Nada foi alterado."); process.exit(1); }
 const urls = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]).filter((u) => u !== BASE && u.startsWith(`${BASE}/`));
 console.log(`sitemap: ${urls.length} anúncios`);
 
@@ -122,6 +123,8 @@ async function worker(fila) {
 const fila = [...urls];
 await Promise.all(Array.from({ length: CONC }, () => worker(fila)));
 const final = limpar(out);
+if (final.length < urls.length * 0.7) { console.error(`Só ${final.length} de ${urls.length} anúncios vieram (${falhas} falhas). Abortado para não apagar o catálogo atual.`); process.exit(1); }
 await mkdir(new URL(".", OUT), { recursive: true });
 await writeFile(OUT, JSON.stringify(final));
+console.log(`Agora rode: node scripts/limpar-catalogo.mjs`);
 console.log(`ok: ${final.length} importados (${out.length - final.length} com preço errado ficaram de fora), ${falhas} falhas`);

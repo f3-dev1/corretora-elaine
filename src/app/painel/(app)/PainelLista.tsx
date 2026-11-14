@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { acaoRapida } from "../actions";
 import { brl, codigo, STATUS_LABEL, type Finalidade, type Status } from "@/lib/tipos";
 
@@ -23,6 +23,8 @@ export default function PainelLista({ linhas }: { linhas: Linha[] }) {
   const [pend, start] = useTransition();
   const [msg, setMsg] = useState<{ tipo: "ok" | "erro"; texto: string } | null>(null);
   const [excluindo, setExcluindo] = useState<string | null>(null);
+  const [otim, setOtim] = useState<Record<string, Partial<Linha>>>({});
+  useEffect(() => { if (!msg) return; const t = setTimeout(() => setMsg(null), 4500); return () => clearTimeout(t); }, [msg]);
 
   const filtradas = useMemo(() => {
     const t = norm(q);
@@ -35,13 +37,17 @@ export default function PainelLista({ linhas }: { linhas: Linha[] }) {
   const pagina = Math.min(pag, paginas);
   const vis = filtradas.slice((pagina - 1) * POR_PAG, pagina * POR_PAG);
 
-  const rodar = (id: string, a: Parameters<typeof acaoRapida>[1], texto: string) =>
+  const rodar = (id: string, a: Parameters<typeof acaoRapida>[1], texto: string) => {
+    // mostra a mudança na hora; se der erro, volta ao valor anterior
+    if (a.status || typeof a.destaque === "boolean") setOtim((o) => ({ ...o, [id]: { ...o[id], ...(a.status ? { status: a.status } : {}), ...(typeof a.destaque === "boolean" ? { destaque: a.destaque } : {}) } }));
     start(async () => {
       const r = await acaoRapida(id, a);
       setMsg(r.ok ? { tipo: "ok", texto } : { tipo: "erro", texto: r.erro ?? "Não foi possível salvar." });
       setExcluindo(null);
-      if (r.ok) router.refresh();
+      if (!r.ok) setOtim((o) => { const n = { ...o }; delete n[id]; return n; });
+      else router.refresh();
     });
+  };
 
   return (
     <section className={`pn-lista${pend ? " busy" : ""}`}>
@@ -61,7 +67,7 @@ export default function PainelLista({ linhas }: { linhas: Linha[] }) {
       {msg && <p className={`pn-msg ${msg.tipo}`} role="status">{msg.texto}</p>}
 
       <ul className="pn-rows">
-        {vis.map((l) => (
+        {vis.map((l0) => { const l = { ...l0, ...otim[l0.id] }; return (
           <li key={l.id} className="pn-row">
             <Link href={`/painel/imovel/${l.id}`} className="pn-thumb" aria-label={`Editar ${l.titulo}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -78,27 +84,28 @@ export default function PainelLista({ linhas }: { linhas: Linha[] }) {
             <select
               className={`pn-status st-${l.status}`}
               value={l.status}
+              disabled={pend}
               aria-label="Situação"
               onChange={(e) => rodar(l.id, { status: e.target.value as Status }, `Situação alterada para ${STATUS_LABEL[e.target.value as Status]}.`)}
             >
               {(Object.keys(STATUS_LABEL) as Status[]).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
             </select>
-            <button type="button" className={`pn-star${l.destaque ? " on" : ""}`} aria-pressed={l.destaque} title="Destaque na página inicial"
+            <button type="button" disabled={pend} className={`pn-star${l.destaque ? " on" : ""}`} aria-pressed={l.destaque} aria-label="Destaque na página inicial" title="Destaque na página inicial"
               onClick={() => rodar(l.id, { destaque: !l.destaque }, l.destaque ? "Tirado dos destaques." : "Colocado em destaque.")}>★</button>
             <div className="pn-acts">
               <Link href={`/painel/imovel/${l.id}`}>Editar</Link>
               <a href={`/imovel/${l.slug}`} target="_blank" rel="noopener">Ver</a>
               {excluindo === l.id ? (
                 <span className="pn-conf">Excluir mesmo?
-                  <button type="button" onClick={() => rodar(l.id, { excluir: true }, "Imóvel excluído.")}>Sim</button>
-                  <button type="button" onClick={() => setExcluindo(null)}>Não</button>
+                  <button type="button" disabled={pend} onClick={() => rodar(l.id, { excluir: true }, "Imóvel excluído.")}>Sim</button>
+                  <button type="button" autoFocus onClick={() => setExcluindo(null)}>Não</button>
                 </span>
               ) : (
                 <button type="button" className="pn-del" onClick={() => setExcluindo(l.id)}>Excluir</button>
               )}
             </div>
           </li>
-        ))}
+        ); })}
       </ul>
       {vis.length === 0 && <p className="pn-vazio">Nenhum imóvel encontrado com essa busca.</p>}
       {paginas > 1 && (

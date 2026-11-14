@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Hero from "@/components/Hero";
 import Listings from "@/components/Listings";
@@ -9,6 +10,8 @@ import Motion from "@/components/Motion";
 import { Logo } from "@/components/icons";
 import { todosImoveis } from "@/lib/catalogo";
 import { bairros, site, visitaUrl } from "@/data/site";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export default async function Home() {
   const total = (await todosImoveis()).filter((x) => x.status === "publicado").length;

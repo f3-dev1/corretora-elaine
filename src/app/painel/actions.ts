@@ -1,21 +1,27 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { criarSessao, encerrarSessao, logado, senhaConfere } from "@/lib/auth";
-import { salvarImoveis, TAG, temBlob, todosImoveisFresco } from "@/lib/catalogo";
-import { slugify, type Imovel, type Status } from "@/lib/tipos";
+import { gravarImoveis, TAG } from "@/lib/catalogo";
+import { num } from "@/lib/numeros";
+import { slugify, TIPOS, type Imovel, type Status } from "@/lib/tipos";
 
 export type Resultado = { ok: boolean; erro?: string };
+
+const STATUS: Status[] = ["publicado", "rascunho", "vendido", "alugado"];
+const ehStatus = (s: unknown): s is Status => STATUS.includes(s as Status);
+const texto = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
 
 async function exigirLogin() {
   if (!(await logado())) redirect("/painel/login");
 }
 
 export async function entrar(_: Resultado | null, fd: FormData): Promise<Resultado> {
-  const senha = String(fd.get("senha") ?? "");
+  const senha = String(fd.get("senha") ?? "").slice(0, 200);
   if (!senhaConfere(senha)) {
-    await new Promise((r) => setTimeout(r, 700));
+    await new Promise((r) => setTimeout(r, 900));
     return { ok: false, erro: "Senha incorreta. Confira e tente de novo." };
   }
   await criarSessao();
@@ -27,51 +33,52 @@ export async function sair() {
   redirect("/painel/login");
 }
 
-async function gravar(mudar: (lista: Imovel[]) => Imovel[]) {
-  if (!temBlob()) throw new Error("O armazenamento ainda não está ligado neste ambiente.");
-  const lista = await todosImoveisFresco();
-  await salvarImoveis(mudar(lista));
-  updateTag(TAG);
-}
+const NUMEROS = {
+  preco: "Preço", condominio: "Condomínio", iptu: "IPTU", quartos: "Quartos", suites: "Suítes", banheiros: "Banheiros",
+  vagas: "Vagas", area: "Área construída", areaTerreno: "Terreno", distanciaMar: "Distância do mar",
+} as const;
 
-// Aceita número ou texto digitado em formato brasileiro ("1.500.000", "441,5") ou simples ("440.7").
-const num = (v: unknown) => {
-  if (v === "" || v == null) return null;
-  if (typeof v === "number") return Number.isFinite(v) ? v : null;
-  let s = String(v).trim();
-  if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
-  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
-  const n = Number(s);
-  return Number.isFinite(n) ? n : null;
-};
-
-export async function salvarImovel(dados: Partial<Imovel> & { id?: string }): Promise<Resultado & { slug?: string }> {
+export async function salvarImovel(dados: Partial<Record<keyof Imovel, unknown>>): Promise<Resultado & { slug?: string; imovel?: Imovel }> {
   await exigirLogin();
-  const titulo = String(dados.titulo ?? "").trim();
-  if (titulo.length < 5) return { ok: false, erro: "Escreva um título com pelo menos 5 letras." };
+  const titulo = texto(dados.titulo, 150);
+  if (titulo.replace(/[^\p{L}\p{N}]/gu, "").length < 5) return { ok: false, erro: "Escreva um título com pelo menos 5 letras." };
+
+  // números: recusa o que não deu para entender, em vez de salvar um valor errado
+  for (const [k, nome] of Object.entries(NUMEROS)) {
+    const v = dados[k as keyof Imovel];
+    if (v !== "" && v != null && num(v) == null) return { ok: false, erro: `Confira o campo "${nome}": use só números, ex.: 1.500.000 ou 441,5.` };
+    const n = num(v);
+    if (n != null && n < 0) return { ok: false, erro: `O campo "${nome}" não pode ser negativo.` };
+  }
+  const preco = num(dados.preco);
+  const finalidade = dados.finalidade === "aluguel" ? "aluguel" : "venda";
+  if (finalidade === "venda" && preco != null && preco < 1000) return { ok: false, erro: "Preço de venda muito baixo. Escreva o valor completo, ex.: 300.000." };
+  const status = ehStatus(dados.status) ? dados.status : "rascunho";
+  const tipo = (TIPOS as readonly string[]).includes(String(dados.tipo)) ? String(dados.tipo) : "Casa";
+  const lado = dados.lado === "praia" || dados.lado === "serra" ? dados.lado : null;
+  const lista = (v: unknown) => (Array.isArray(v) ? v : []);
+  const caracteristicas = [...new Set(lista(dados.caracteristicas).map((c) => texto(c, 80)).filter(Boolean))].slice(0, 40);
+  const fotos = [...new Set(lista(dados.fotos).filter((f): f is string => typeof f === "string" && /^https:\/\/\S+$/.test(f) && f.length <= 600))].slice(0, 60);
+
   const agora = new Date().toISOString();
-  let slugFinal = "";
+  let salvo: Imovel | undefined;
   try {
-    await gravar((lista) => {
-      const antigo = dados.id ? lista.find((x) => x.id === dados.id) : undefined;
-      const id = antigo?.id ?? Math.random().toString(36).slice(2, 8);
-      const slug = antigo?.slug ?? `${slugify(`${titulo} ${dados.bairro ?? ""}`)}-${id}`;
-      slugFinal = slug;
+    await gravarImoveis((todos) => {
+      const id0 = typeof dados.id === "string" ? dados.id : undefined;
+      const antigo = id0 ? todos.find((x) => x.id === id0) : undefined;
+      if (id0 && !antigo) throw new Error("Este imóvel não existe mais (pode ter sido excluído).");
+      let id = antigo?.id;
+      while (!id || (!antigo && todos.some((x) => x.id === id))) id = randomUUID().replace(/-/g, "").slice(0, 8);
+      const bairro = texto(dados.bairro, 80) || null;
+      const slug = antigo?.slug ?? `${slugify(`${titulo} ${bairro ?? ""}`) || "imovel"}-${id}`;
       const im: Imovel = {
         ...(antigo ?? {}),
-        id,
-        slug,
-        titulo,
-        tipo: String(dados.tipo || "Casa"),
-        finalidade: dados.finalidade === "aluguel" ? "aluguel" : "venda",
-        status: (["publicado", "rascunho", "vendido", "alugado"].includes(String(dados.status)) ? dados.status : "rascunho") as Status,
+        id, slug, titulo, tipo, finalidade, status, lado, caracteristicas, fotos, bairro, preco,
         destaque: Boolean(dados.destaque),
-        preco: num(dados.preco),
         condominio: num(dados.condominio),
         iptu: num(dados.iptu),
-        bairro: String(dados.bairro ?? "").trim() || null,
-        cidade: String(dados.cidade ?? "").trim() || "Itanhaém",
-        endereco: String(dados.endereco ?? "").trim() || null,
+        cidade: texto(dados.cidade, 60) || "Itanhaém",
+        endereco: texto(dados.endereco, 160) || null,
         mapaExato: Boolean(dados.mapaExato),
         quartos: num(dados.quartos),
         suites: num(dados.suites),
@@ -80,38 +87,40 @@ export async function salvarImovel(dados: Partial<Imovel> & { id?: string }): Pr
         area: num(dados.area),
         areaTerreno: num(dados.areaTerreno),
         distanciaMar: num(dados.distanciaMar),
-        lado: dados.lado === "praia" || dados.lado === "serra" ? dados.lado : null,
         piscina: Boolean(dados.piscina),
         financiamento: Boolean(dados.financiamento),
         permuta: Boolean(dados.permuta),
-        caracteristicas: (dados.caracteristicas ?? []).map((c) => String(c).trim()).filter(Boolean).slice(0, 40),
-        descricao: String(dados.descricao ?? "").trim(),
-        fotos: (dados.fotos ?? []).filter((f) => typeof f === "string" && f.startsWith("https://")).slice(0, 60),
+        descricao: texto(dados.descricao, 10000),
         revisar: undefined,
         criadoEm: antigo?.criadoEm ?? agora,
         atualizadoEm: agora,
       };
-      return antigo ? lista.map((x) => (x.id === id ? im : x)) : [im, ...lista];
+      salvo = im;
+      return antigo ? todos.map((x) => (x.id === id ? im : x)) : [im, ...todos];
     });
   } catch (e) {
     return { ok: false, erro: e instanceof Error ? e.message : "Não foi possível salvar." };
   }
-  return { ok: true, slug: slugFinal };
+  updateTag(TAG);
+  return { ok: true, slug: salvo?.slug, imovel: salvo };
 }
 
 export async function acaoRapida(id: string, acao: { status?: Status; destaque?: boolean; excluir?: boolean }): Promise<Resultado> {
   await exigirLogin();
+  if (acao.status !== undefined && !ehStatus(acao.status)) return { ok: false, erro: "Situação inválida." };
   try {
-    await gravar((lista) => {
+    await gravarImoveis((lista) => {
+      if (!lista.some((x) => x.id === id)) throw new Error("Este imóvel não existe mais.");
       if (acao.excluir) return lista.filter((x) => x.id !== id);
       return lista.map((x) =>
         x.id === id
-          ? { ...x, ...(acao.status ? { status: acao.status } : {}), ...(acao.destaque != null ? { destaque: acao.destaque } : {}), atualizadoEm: new Date().toISOString() }
+          ? { ...x, ...(acao.status ? { status: acao.status } : {}), ...(typeof acao.destaque === "boolean" ? { destaque: acao.destaque } : {}), atualizadoEm: new Date().toISOString() }
           : x,
       );
     });
-    return { ok: true };
   } catch (e) {
     return { ok: false, erro: e instanceof Error ? e.message : "Não foi possível salvar." };
   }
+  updateTag(TAG);
+  return { ok: true };
 }

@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { todosImoveisFresco } from "@/lib/catalogo";
+import { imoveisDoPainel } from "@/lib/catalogo";
 import PainelLista, { type Linha } from "./PainelLista";
 
 export default async function PainelHome() {
-  const lista = await todosImoveisFresco();
+  const lista = await imoveisDoPainel();
   const linhas: Linha[] = lista.map((im) => ({
     id: im.id,
     slug: im.slug,

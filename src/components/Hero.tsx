@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Fragment, useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { heroSlides } from "@/data/imoveis";
 import { site, instagramUrl, whatsappUrl } from "@/data/site";
@@ -29,8 +29,10 @@ export default function Hero() {
     let cur = 0;
     let timer: number | undefined;
     const ctx = gsap.context(() => {
-      const kb = (s: HTMLElement) =>
-        gsap.fromTo(s.querySelector("img"), { scale: 1.12 }, { scale: 1, duration: DUR + 1.8, ease: "none" });
+      const kb = (s: HTMLElement) => {
+        const img = s.querySelector("img");
+        if (img) gsap.fromTo(img, { scale: 1.12 }, { scale: 1, duration: DUR + 1.8, ease: "none" });
+      };
 
       const show = (n: number) => {
         const prev = slides[cur];
@@ -64,7 +66,11 @@ export default function Hero() {
       gsap.set(slides.slice(1), { autoAlpha: 0 });
       kb(slides[0]);
       gsap.to(bars[0], { scaleX: 1, duration: DUR, ease: "none" });
-      timer = window.setInterval(() => { if (!document.hidden) show((cur + 1) % slides.length); }, DUR * 1000);
+      // não troca de foto com a aba oculta nem com o topo coberto pela página (economiza quadros na rolagem)
+      timer = window.setInterval(() => {
+        if (document.hidden || window.scrollY > el.offsetHeight * 0.9) return;
+        show((cur + 1) % slides.length);
+      }, DUR * 1000);
 
       // entrada
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
@@ -79,13 +85,23 @@ export default function Hero() {
     return () => { window.clearInterval(timer); ctx.revert(); };
   }, []);
 
+  // as fotos 2 a 4 só começam a baixar depois que a primeira (a do LCP) carregou
+  const [demais, setDemais] = useState(false);
+  useEffect(() => {
+    const libera = () => setDemais(true);
+    if (document.readyState === "complete") { const t = setTimeout(libera, 300); return () => clearTimeout(t); }
+    addEventListener("load", libera, { once: true });
+    const t = setTimeout(libera, 3500);
+    return () => { removeEventListener("load", libera); clearTimeout(t); };
+  }, []);
+
   return (
     <div className="hero-wrap" id="inicio" ref={root}>
       <section className="frame hero" aria-label="Destaques">
         <div className="slides">
           {heroSlides.map((s, i) => (
             <div className="slide" key={s.img}>
-              <Image src={s.img} alt={s.alt} fill sizes="100vw" preload={i === 0} loading={i === 0 ? "eager" : "lazy"} />
+              {(i === 0 || demais) && <Image src={s.img} alt={s.alt} fill sizes="100vw" preload={i === 0} loading={i === 0 ? "eager" : "lazy"} />}
             </div>
           ))}
         </div>
@@ -103,7 +119,7 @@ export default function Hero() {
         <div className="hcontent">
           <div className="hleft">
             <div className="hmeta mono">
-              <div className="cap" aria-live="polite"><span id="cap">{heroSlides[0].legenda}</span></div>
+              <div className="cap"><span id="cap">{heroSlides[0].legenda}</span></div>
               <div className="bars">
                 <em id="count">01 / {String(heroSlides.length).padStart(2, "0")}</em>
                 {heroSlides.map((s) => <i key={s.img}><b /></i>)}

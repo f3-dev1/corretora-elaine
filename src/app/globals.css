@@ -72,10 +72,10 @@ address { font-style: normal; }
 
 /* ============ HERO ============ */
 .hero-wrap { position: sticky; top: 0; z-index: 0; height: 100svh; min-height: 600px; padding: 12px; padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
-.frame { position: relative; height: 100%; border-radius: 26px; overflow: hidden; clip-path: inset(0 round 26px); color: #fff; background: #24301f; transform-origin: 50% 30%; }
+.frame { position: relative; height: 100%; border-radius: 26px; overflow: hidden; clip-path: inset(0% 0% 0% 0% round 26px); color: #fff; background: #24301f; transform-origin: 50% 30%; }
 .slides { position: absolute; inset: 0; z-index: 0; isolation: isolate; }
 .slide { position: absolute; inset: 0; }
-.slide img { object-fit: cover; will-change: transform; }
+.slide img { object-fit: cover; }
 .slide:not(:first-child) { visibility: hidden; opacity: 0; }
 .frame-shade { position: absolute; inset: 0; z-index: 1; pointer-events: none; background:
   linear-gradient(180deg, rgba(10, 8, 6, 0.42) 0%, rgba(10, 8, 6, 0) 26%),
@@ -428,7 +428,7 @@ footer { position: fixed; left: 0; right: 0; bottom: 0; height: max(100svh, 720p
   .gal-m-i:focus-visible { outline: 3px solid var(--brown); outline-offset: -3px; }
   .gal-m-n { position: absolute; right: 12px; bottom: 12px; padding: 5px 10px; border-radius: 999px; background: rgba(21, 17, 14, 0.7); color: #fff; pointer-events: none; }
 }
-.lb { position: fixed; inset: 0; z-index: 100; background: rgba(12, 9, 7, 0.94); display: grid; place-items: center; padding: 56px 16px; }
+.lb { position: fixed; inset: 0; z-index: 100; background: rgba(12, 9, 7, 0.94); display: grid; place-items: center; padding: 56px 16px; overscroll-behavior: contain; touch-action: pan-x pan-y pinch-zoom; }
 .lb img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 4px; }
 .lb-n { position: absolute; top: calc(18px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); color: #fff; }
 .lb-x, .lb-a { all: unset; cursor: pointer; position: absolute; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: rgba(255, 255, 255, 0.12); color: #fff; font-size: 22px; }
@@ -592,3 +592,31 @@ footer { position: fixed; left: 0; right: 0; bottom: 0; height: max(100svh, 720p
 .pf-inline { display: inline-flex; align-items: center; gap: 8px; }
 .pf-inline select { width: auto; height: 42px; }
 @media (max-width: 760px) { .pf-bar { left: 0; } .pf-bar-r { width: 100%; justify-content: flex-end; } }
+
+/* ============ correções de acessibilidade e de telas pequenas (sem mudança visual) ============ */
+html { scroll-padding-top: 72px; }
+/* links escondidos que recebem foco pelo teclado aparecem */
+.top:focus-within { transform: none; }
+.bar.away:focus-within { transform: translate(-50%, 0); opacity: 1; }
+/* botões com all:unset perdiam o contorno de foco */
+:where(.gal-todas, .limpar, .pn-sair, .pn-del, .pn-conf button, .pn-pag button, .pf-add button, .pf-fa button, .lb-x, .lb-a, .totop, .seg button, .gal-i, .gal-m-i):focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+/* telas baixas: o rodapé-cortina cortava o título; vira rodapé normal só onde quebrava */
+@media (max-height: 719px) {
+  .reveal { height: auto; clip-path: none; }
+  .reveal footer { position: relative; height: auto; min-height: 100svh; }
+}
+/* financiamento em celular baixo: card ativo não fica cortado */
+@media (max-width: 900px) and (max-height: 700px) { .fin-in { padding-block: 72px 24px; } }
+/* barra de busca em celular de 320 px */
+@media (max-width: 359px) { .go { padding: 0 10px; } .seg button { padding: 0 9px; } .hcontent { padding-bottom: 76px; } }
+/* painel em 320 px */
+@media (max-width: 360px) { .pn-side { gap: 8px; padding-inline: 12px; } .pn-nav a { padding: 8px 6px; } }
+/* barra fixa do formulário do painel não cobre o fim da página no celular */
+@media (max-width: 760px) { .pf-form { padding-bottom: calc(240px + env(safe-area-inset-bottom, 0px)); } }
+/* iOS dá zoom em campos com fonte menor que 16 px */
+@supports (-webkit-touch-callout: none) {
+  .fx input, .fx select, .pn-filtros input, .pn-filtros select, .pf input, .pf select, .pf-card textarea, .pf-add input, .pf-inline select, .pn-form-login input { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}

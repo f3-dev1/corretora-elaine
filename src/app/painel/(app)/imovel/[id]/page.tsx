@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { todosImoveisFresco } from "@/lib/catalogo";
+import { imoveisDoPainel } from "@/lib/catalogo";
 import { codigo } from "@/lib/tipos";
 import ImovelForm from "../ImovelForm";
 
 export default async function EditarImovel(props: PageProps<"/painel/imovel/[id]">) {
   const { id } = await props.params;
-  const lista = await todosImoveisFresco();
+  const lista = await imoveisDoPainel();
   const im = lista.find((x) => x.id === id);
   if (!im) notFound();
   const bairros = [...new Set(lista.map((x) => x.bairro).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, "pt-BR"));

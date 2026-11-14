@@ -19,14 +19,17 @@ export default function Motion() {
     const bar = $("#bar");
     const heroWrap = $("#inicio");
     const contato = $("#contato");
+    const finSec = $("#financiamento");
 
     // topo compacto e barra de busca
     const onScroll = () => {
       const y = scrollY;
       const h = heroWrap?.offsetHeight ?? innerHeight;
       const footTop = contato?.getBoundingClientRect().top ?? Infinity;
+      const fin = finSec?.getBoundingClientRect();
+      const finPreso = !!fin && fin.top <= 0 && fin.bottom >= innerHeight; // não cobrir os cards do financiamento
       top?.classList.toggle("show", y > h * 0.9 && footTop > innerHeight * 0.35);
-      bar?.classList.toggle("away", y < h * 0.45 || footTop < innerHeight * 0.6);
+      bar?.classList.toggle("away", y < h * 0.45 || footTop < innerHeight * 0.6 || finPreso);
     };
     addEventListener("scroll", onScroll, { passive: true });
     onScroll();
@@ -80,13 +83,18 @@ export default function Motion() {
       const track = $(".marquee .track");
       if (track) {
         const loop = gsap.to(track, { xPercent: -50, duration: 40, ease: "none", repeat: -1 });
-        let boost = gsap.to({}, {});
+        // um único "freio" reaproveitado, em vez de criar uma animação nova a cada evento de rolagem
+        const volta = gsap.to(loop, { timeScale: 1, duration: 1.2, ease: "power2.out", paused: true });
+        let ultimo = 1;
         lenis.on("scroll", ({ velocity }: { velocity: number }) => {
           const ts = 1 + Math.min(Math.abs(velocity) / 6, 5);
-          boost.kill();
+          if (Math.abs(ts - ultimo) < 0.15) return;
+          ultimo = ts;
           loop.timeScale(ts);
-          boost = gsap.to(loop, { timeScale: 1, duration: 1.2, ease: "power2.out" });
+          volta.invalidate().restart();
         });
+        // fora da tela, a faixa para
+        ScrollTrigger.create({ trigger: ".marquee", start: "top bottom", end: "bottom top", onToggle: (s) => (s.isActive ? loop.play() : loop.pause()) });
       }
 
       // fotos dos imóveis abrem de baixo para cima
@@ -95,7 +103,7 @@ export default function Motion() {
         const img = it.querySelector(".ph img");
         const tl = gsap.timeline({ scrollTrigger: { trigger: it, start: "top 88%", once: true } });
         tl.from(ph, { clipPath: "inset(100% 0% 0% 0%)", duration: 1.2, ease: "expo.out" })
-          .from(img, { scale: 1.15, duration: 1.5, ease: "expo.out", clearProps: "transform" }, 0)
+          .from(img, { scale: 1.15, duration: 1.5, ease: "expo.out", onStart: () => { if (img) gsap.set(img, { transition: "none" }); }, clearProps: "transform,transition" }, 0)
           .from(it.querySelectorAll("h3, .lbl"), { y: 16, autoAlpha: 0, duration: 0.8, stagger: 0.07, ease: "power3.out" }, 0.25);
       });
 
@@ -147,6 +155,11 @@ export default function Motion() {
     }
 
     const refresh = () => ScrollTrigger.refresh();
+    // vindo de outra página com #âncora: depois que o layout animado se monta, vai ao lugar certo
+    if (location.hash) {
+      const alvo = location.hash;
+      requestAnimationFrame(() => { ScrollTrigger.refresh(); if (document.querySelector(alvo)) lenis.scrollTo(alvo, { immediate: true, offset: -64 }); });
+    }
     addEventListener("load", refresh);
     document.fonts?.ready.then(refresh);
 
@@ -157,6 +170,7 @@ export default function Motion() {
       cleanups.forEach((c) => c());
       ctx.revert();
       gsap.ticker.remove(raf);
+      gsap.ticker.lagSmoothing(500, 33);
       lenis.destroy();
       document.documentElement.classList.remove("pin");
     };

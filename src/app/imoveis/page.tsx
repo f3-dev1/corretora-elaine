@@ -4,13 +4,18 @@ import { Suspense } from "react";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import ImovelCard from "@/components/ImovelCard";
 import FiltroForm from "@/components/FiltroForm";
-import { todosImoveis } from "@/lib/catalogo";
+import { cacheLife, cacheTag } from "next/cache";
+import { TAG, todosImoveis } from "@/lib/catalogo";
 import { filtrar, opcoes, type Filtros } from "@/lib/filtros";
 
+const titulo = "Imóveis à venda e para alugar em Itanhaém | Zênite Imóveis";
+const descricao = "Casas, chácaras, apartamentos e terrenos em Itanhaém e litoral sul de SP. Filtre por bairro, preço, quartos, piscina e distância do mar.";
 export const metadata: Metadata = {
-  title: "Imóveis à venda e para alugar em Itanhaém | Zênite Imóveis",
-  description: "Casas, chácaras, apartamentos e terrenos em Itanhaém e litoral sul de SP. Filtre por bairro, preço, quartos, piscina e distância do mar.",
+  title: titulo,
+  description: descricao,
   alternates: { canonical: "/imoveis" },
+  openGraph: { title: titulo, description: descricao, url: "/imoveis" },
+  twitter: { card: "summary_large_image", title: titulo, description: descricao },
 };
 
 export default async function ImoveisPage(props: PageProps<"/imoveis">) {
@@ -38,10 +43,25 @@ export default async function ImoveisPage(props: PageProps<"/imoveis">) {
   );
 }
 
+// cada combinação de filtros fica em cache compartilhado; só a página pedida (24 itens) sai daqui
+async function buscar(f: Filtros) {
+  "use cache: remote";
+  cacheLife("max");
+  cacheTag(TAG);
+  return filtrar(await todosImoveis(), f);
+}
+
 async function Resultados({ searchParams }: Pick<PageProps<"/imoveis">, "searchParams">) {
   const sp = (await searchParams) as Record<string, string | undefined>;
-  const f: Filtros = Object.fromEntries(Object.entries(sp).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v]));
-  const { itens, total, pagina, paginas } = filtrar(await todosImoveis(), f);
+  // só os filtros conhecidos entram (evita uma entrada de cache por parâmetro inventado)
+  const CHAVES = ["finalidade", "tipo", "bairro", "min", "max", "quartos", "mar", "piscina", "financia", "q", "ordem", "p"] as const;
+  const f: Filtros = {};
+  for (const k of CHAVES) {
+    const v = sp[k] as string | string[] | undefined;
+    const s = (Array.isArray(v) ? v[0] : v)?.slice(0, 80);
+    if (s) f[k] = s;
+  }
+  const { itens, total, pagina, paginas } = await buscar(f);
   const link = (p: number) => {
     const q = new URLSearchParams(Object.entries(f).filter(([, v]) => v) as [string, string][]);
     if (p > 1) q.set("p", String(p)); else q.delete("p");

@@ -15,7 +15,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title,
   description,
-  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "pt_BR",
@@ -53,10 +52,10 @@ const jsonLd = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${cinzel.variable} ${hanken.variable} ${plexMono.variable}`}>
+    <html lang="pt-BR" data-scroll-behavior="smooth" className={`${cinzel.variable} ${hanken.variable} ${plexMono.variable}`}>
       <body>
         {children}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       </body>
     </html>
   );

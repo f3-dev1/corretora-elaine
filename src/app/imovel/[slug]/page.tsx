@@ -18,13 +18,18 @@ export async function generateStaticParams() {
 export async function generateMetadata(props: PageProps<"/imovel/[slug]">): Promise<Metadata> {
   const { slug } = await props.params;
   const im = await imovelPorSlug(slug);
-  if (!im) return { title: "Imóvel não encontrado | Zênite Imóveis" };
-  const desc = `${im.tipo} ${im.finalidade === "aluguel" ? "para alugar" : "à venda"} em ${im.bairro ?? im.cidade}, Itanhaém. ${brl(im.preco)}. ${im.descricao.slice(0, 120)}`;
+  if (!im || !visivel(im)) return { title: "Imóvel não encontrado | Zênite Imóveis", robots: { index: false } };
+  const resumo = im.descricao.length > 130 ? `${im.descricao.slice(0, 130).replace(/\s+\S*$/, "")}…` : im.descricao;
+  const local = [im.bairro, im.cidade].filter(Boolean).join(", ");
+  const desc = `${im.tipo} ${im.finalidade === "aluguel" ? "para alugar" : "à venda"} em ${local}. ${brl(im.preco)}. ${resumo}`;
+  const titulo = `${im.titulo} — ${brl(im.preco)} | Zênite Imóveis`;
+  const img = im.fotos[0] ? [im.fotos[0]] : undefined;
   return {
-    title: `${im.titulo} — ${brl(im.preco)} | Zênite Imóveis`,
+    title: titulo,
     description: desc,
     alternates: { canonical: `/imovel/${im.slug}` },
-    openGraph: { title: im.titulo, description: desc, images: im.fotos[0] ? [{ url: im.fotos[0] }] : undefined, locale: "pt_BR", type: "website" },
+    openGraph: { title: im.titulo, description: desc, url: `/imovel/${im.slug}`, images: img, locale: "pt_BR", type: "website" },
+    twitter: { card: "summary_large_image", title: im.titulo, description: desc, images: img },
   };
 }
 
@@ -145,7 +150,7 @@ async function Detalhe({ params }: Pick<PageProps<"/imovel/[slug]">, "params">) 
       </div>
 
       {parecidos.length > 0 && <Parecidos lista={parecidos} />}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
     </article>
   );
 }
