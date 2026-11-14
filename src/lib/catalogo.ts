@@ -1,5 +1,6 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
+import { connection } from "next/server";
 import { get, put } from "@vercel/blob";
 import seed from "@/data/catalogo.json";
 import type { Imovel } from "./tipos";
@@ -20,14 +21,20 @@ export async function todosImoveis(): Promise<Imovel[]> {
   cacheLife("max");
   cacheTag(TAG);
   if (temBlob()) {
-    const lista = await lerDoBlob();
-    if (lista) return lista;
+    try {
+      const lista = await lerDoBlob();
+      if (lista) return lista;
+    } catch (e) {
+      // o site público continua no ar com o catálogo importado se o Blob falhar
+      console.error("Falha ao ler imóveis do Blob; usando o catálogo importado.", e);
+    }
   }
   return seed as Imovel[];
 }
 
-/** Leitura sem cache, para o painel editar sempre a versão mais nova. */
+/** Leitura sem cache, na hora do acesso, para o painel editar sempre a versão mais nova. */
 export async function todosImoveisFresco(): Promise<Imovel[]> {
+  await connection();
   if (temBlob()) return (await lerDoBlob()) ?? (seed as Imovel[]);
   return seed as Imovel[];
 }
